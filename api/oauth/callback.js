@@ -1,8 +1,8 @@
-import { saveToken } from '../lib/supabase.js';
+const { saveToken } = require('../lib/supabase.js');
 
 const ML_API_BASE = 'https://api.mercadolibre.com';
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const { code, error: authError } = req.query;
 
   if (authError) {
@@ -64,4 +64,4 @@ export default async function handler(req, res) {
     console.error('Callback error:', error);
     res.redirect(`/?error=${encodeURIComponent('Erro interno')}`);
   }
-}
+};

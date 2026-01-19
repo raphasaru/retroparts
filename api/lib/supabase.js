@@ -1,12 +1,19 @@
-import { createClient } from '@supabase/supabase-js';
+const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+let supabase = null;
 
-export async function getToken() {
-  const { data, error } = await supabase
+function getSupabase() {
+  if (!supabase) {
+    supabase = createClient(supabaseUrl, supabaseKey);
+  }
+  return supabase;
+}
+
+async function getToken() {
+  const { data, error } = await getSupabase()
     .from('oauth_tokens')
     .select('*')
     .order('updated_at', { ascending: false })
@@ -23,8 +30,8 @@ export async function getToken() {
   return data;
 }
 
-export async function saveToken(tokenData, userInfo) {
-  const { data, error } = await supabase
+async function saveToken(tokenData, userInfo) {
+  const { data, error } = await getSupabase()
     .from('oauth_tokens')
     .upsert({
       seller_id: String(userInfo.id),
@@ -41,8 +48,8 @@ export async function saveToken(tokenData, userInfo) {
   return { data, error };
 }
 
-export async function updateToken(sellerId, tokenData) {
-  const { data, error } = await supabase
+async function updateToken(sellerId, tokenData) {
+  const { data, error } = await getSupabase()
     .from('oauth_tokens')
     .update({
       access_token: tokenData.access_token,
@@ -55,3 +62,5 @@ export async function updateToken(sellerId, tokenData) {
 
   return { data, error };
 }
+
+module.exports = { getToken, saveToken, updateToken };

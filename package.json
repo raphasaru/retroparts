@@ -1,7 +1,6 @@
 {
   "name": "retroparts",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "cd app && npm run dev",
     "build": "cd app && npm run build",

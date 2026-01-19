@@ -1,6 +1,6 @@
-import { getToken } from '../lib/supabase.js';
+const { getToken } = require('../lib/supabase.js');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
 
@@ -23,4 +23,4 @@ export default async function handler(req, res) {
   } catch (error) {
     res.status(500).json({ error: 'Erro interno', message: error.message });
   }
-}
+};

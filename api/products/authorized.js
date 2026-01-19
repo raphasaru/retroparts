@@ -1,4 +1,4 @@
-import { getToken, updateToken } from '../lib/supabase.js';
+const { getToken, updateToken } = require('../lib/supabase.js');
 
 const ML_API_BASE = 'https://api.mercadolibre.com';
 
@@ -29,7 +29,7 @@ async function refreshToken(token) {
   return tokenData.access_token;
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
 
@@ -98,4 +98,4 @@ export default async function handler(req, res) {
     console.error('Products error:', error);
     res.status(500).json({ error: 'Erro interno', message: error.message });
   }
-}
+};
