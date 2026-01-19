@@ -44,6 +44,7 @@ module.exports = async function handler(req, res) {
     }
 
     let accessToken = token.access_token;
+    const sellerId = token.seller_id;
 
     // Refresh token if expired
     if (token.expired && token.refresh_token) {
@@ -57,42 +58,58 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // Fetch user's products
-    const response = await fetch(`${ML_API_BASE}/users/me/items/search?status=active&limit=50`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+    // Fetch all item IDs with pagination
+    let allItemIds = [];
+    let offset = 0;
+    const limit = 50;
+    let total = 0;
+
+    // First request to get total
+    const firstResponse = await fetch(`${ML_API_BASE}/users/${sellerId}/items/search?status=active&limit=${limit}&offset=0`, {
+      headers: { 'Authorization': `Bearer ${accessToken}` },
     });
 
-    if (!response.ok) {
-      const error = await response.text();
-      return res.status(response.status).json({ error: 'Erro ao buscar produtos', details: error });
+    if (!firstResponse.ok) {
+      const error = await firstResponse.text();
+      return res.status(firstResponse.status).json({ error: 'Erro ao buscar produtos', details: error });
     }
 
-    const data = await response.json();
+    const firstData = await firstResponse.json();
+    total = firstData.paging?.total || 0;
+    allItemIds = firstData.results || [];
 
-    // Fetch product details
-    if (data.results && data.results.length > 0) {
-      const itemIds = data.results.slice(0, 20).join(',');
-      const itemsResponse = await fetch(`${ML_API_BASE}/items?ids=${itemIds}`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
+    // Fetch remaining pages if needed (up to 200 items max)
+    while (allItemIds.length < total && allItemIds.length < 200) {
+      offset += limit;
+      const pageResponse = await fetch(`${ML_API_BASE}/users/${sellerId}/items/search?status=active&limit=${limit}&offset=${offset}`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+      });
+      if (pageResponse.ok) {
+        const pageData = await pageResponse.json();
+        allItemIds = allItemIds.concat(pageData.results || []);
+      } else {
+        break;
+      }
+    }
+
+    // Fetch product details in batches of 20
+    const allProducts = [];
+    for (let i = 0; i < allItemIds.length; i += 20) {
+      const batch = allItemIds.slice(i, i + 20);
+      const itemsResponse = await fetch(`${ML_API_BASE}/items?ids=${batch.join(',')}`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` },
       });
 
       if (itemsResponse.ok) {
         const itemsData = await itemsResponse.json();
-        return res.json({
-          total: data.paging?.total || 0,
-          results: itemsData.map(item => item.body).filter(Boolean),
-        });
+        allProducts.push(...itemsData.map(item => item.body).filter(Boolean));
       }
     }
 
     res.json({
-      total: data.paging?.total || 0,
-      results: [],
-      item_ids: data.results || [],
+      total: total,
+      fetched: allProducts.length,
+      results: allProducts,
     });
   } catch (error) {
     console.error('Products error:', error);
