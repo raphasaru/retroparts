@@ -78,8 +78,8 @@ module.exports = async function handler(req, res) {
     total = firstData.paging?.total || 0;
     allItemIds = firstData.results || [];
 
-    // Fetch remaining pages if needed (up to 200 items max)
-    while (allItemIds.length < total && allItemIds.length < 200) {
+    // Fetch remaining pages (no limit - fetch all products)
+    while (allItemIds.length < total) {
       offset += limit;
       const pageResponse = await fetch(`${ML_API_BASE}/users/${sellerId}/items/search?status=active&limit=${limit}&offset=${offset}`, {
         headers: { 'Authorization': `Bearer ${accessToken}` },

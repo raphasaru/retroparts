@@ -55,13 +55,13 @@ export function ProductCard({ product, index }: ProductCardProps) {
     >
       <div className="relative bg-carbon-800 border border-carbon-600/30 rounded-2xl overflow-hidden hover:border-amber-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/5 h-full flex flex-col">
         {/* Product Image */}
-        <div className="relative h-48 bg-gradient-to-br from-carbon-700 to-carbon-800 overflow-hidden">
+        <div className="relative aspect-square bg-gradient-to-br from-carbon-700 to-carbon-800 overflow-hidden">
           {/* Real Image or Fallback */}
           {product.thumbnail && !imageError ? (
             <img
               src={product.thumbnail}
               alt={product.titulo}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
               onError={() => setImageError(true)}
               loading="lazy"
             />
