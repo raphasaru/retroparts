@@ -1,13 +1,17 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Header } from './components/Header';
 import { SearchBar } from './components/SearchBar';
 import { Filters } from './components/Filters';
 import { ProductGrid } from './components/ProductGrid';
+import { Pagination } from './components/Pagination';
 import { useProducts } from './hooks/useProducts';
 import { useSearch } from './hooks/useSearch';
 
+const ITEMS_PER_PAGE = 30;
+
 function App() {
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch products from ML API
   const {
@@ -38,6 +42,19 @@ function App() {
     if (key === 'freteGratis') return value === true;
     return value !== null;
   }).length;
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredProducts.slice(startIndex, endIndex);
+  }, [filteredProducts, currentPage]);
+
+  // Reset to page 1 when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, filters.marca, filters.modelo, filters.tipoPeca, filters.lado, filters.comando, filters.freteGratis, filters.precoMin, filters.precoMax]);
 
   return (
     <div className="min-h-screen bg-carbon-900">
@@ -278,7 +295,18 @@ function App() {
             )}
 
             {/* Product Grid */}
-            <ProductGrid products={filteredProducts} query={query} isLoading={isLoading} />
+            <ProductGrid products={paginatedProducts} query={query} isLoading={isLoading} />
+
+            {/* Pagination */}
+            {!isLoading && filteredProducts.length > ITEMS_PER_PAGE && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                totalItems={filteredProducts.length}
+                itemsPerPage={ITEMS_PER_PAGE}
+              />
+            )}
           </div>
         </div>
       </main>

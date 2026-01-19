@@ -79,18 +79,28 @@ module.exports = async function handler(req, res) {
     allItemIds = firstData.results || [];
 
     // Fetch remaining pages (no limit - fetch all products)
-    while (allItemIds.length < total) {
+    let attempts = 0;
+    const maxAttempts = 100; // Safety limit
+    console.log(`📦 Total de produtos: ${total}, Primeira página: ${allItemIds.length}`);
+    
+    while (allItemIds.length < total && attempts < maxAttempts) {
       offset += limit;
+      attempts++;
       const pageResponse = await fetch(`${ML_API_BASE}/users/${sellerId}/items/search?status=active&limit=${limit}&offset=${offset}`, {
         headers: { 'Authorization': `Bearer ${accessToken}` },
       });
       if (pageResponse.ok) {
         const pageData = await pageResponse.json();
-        allItemIds = allItemIds.concat(pageData.results || []);
+        const newIds = pageData.results || [];
+        allItemIds = allItemIds.concat(newIds);
+        console.log(`📦 Página ${attempts + 1}: +${newIds.length} produtos (Total: ${allItemIds.length}/${total})`);
       } else {
+        console.error(`❌ Erro na página ${attempts + 1}:`, await pageResponse.text());
         break;
       }
     }
+    
+    console.log(`✅ Total de IDs coletados: ${allItemIds.length} de ${total}`);
 
     // Fetch product details in batches of 20
     const allProducts = [];
