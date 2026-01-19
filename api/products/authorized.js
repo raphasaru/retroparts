@@ -78,12 +78,13 @@ module.exports = async function handler(req, res) {
     total = firstData.paging?.total || 0;
     allItemIds = firstData.results || [];
 
-    // Fetch remaining pages (no limit - fetch all products)
+    // Fetch remaining pages - ML API has a limit of ~1000-1050 results
     let attempts = 0;
     const maxAttempts = 100; // Safety limit
+    const ML_PAGINATION_LIMIT = 1000; // Known ML API limit
     console.log(`📦 Total de produtos: ${total}, Primeira página: ${allItemIds.length}`);
     
-    while (allItemIds.length < total && attempts < maxAttempts) {
+    while (allItemIds.length < total && attempts < maxAttempts && allItemIds.length < ML_PAGINATION_LIMIT) {
       offset += limit;
       attempts++;
       const pageResponse = await fetch(`${ML_API_BASE}/users/${sellerId}/items/search?status=active&limit=${limit}&offset=${offset}`, {
@@ -92,15 +93,73 @@ module.exports = async function handler(req, res) {
       if (pageResponse.ok) {
         const pageData = await pageResponse.json();
         const newIds = pageData.results || [];
+        if (newIds.length === 0) break; // No more results
         allItemIds = allItemIds.concat(newIds);
         console.log(`📦 Página ${attempts + 1}: +${newIds.length} produtos (Total: ${allItemIds.length}/${total})`);
       } else {
-        console.error(`❌ Erro na página ${attempts + 1}:`, await pageResponse.text());
+        const errorText = await pageResponse.text();
+        const errorData = JSON.parse(errorText);
+        // If it's the pagination limit error, stop gracefully
+        if (errorData.error === 'bad_request' && errorText.includes('Invalid limit and offset')) {
+          console.warn(`⚠️ Limite de paginação da API atingido em ${allItemIds.length} produtos`);
+          break;
+        }
+        console.error(`❌ Erro na página ${attempts + 1}:`, errorText);
         break;
       }
     }
     
     console.log(`✅ Total de IDs coletados: ${allItemIds.length} de ${total}`);
+    
+    // Try to fetch additional products using alternative strategy if we hit the limit
+    if (allItemIds.length < total && allItemIds.length >= ML_PAGINATION_LIMIT - 50) {
+      console.log(`🔄 Tentando buscar produtos adicionais com estratégia alternativa...`);
+      
+      // Strategy: Try to fetch by searching in the seller's category (retrovisores: MLB1747)
+      // This might bypass the pagination limit
+      try {
+        const categoryResponse = await fetch(`${ML_API_BASE}/sites/MLB/search?seller_id=${sellerId}&category=MLB1747&limit=50&offset=0`, {
+          headers: { 'Authorization': `Bearer ${accessToken}` },
+        });
+        
+        if (categoryResponse.ok) {
+          const categoryData = await categoryResponse.json();
+          const categoryIds = (categoryData.results || []).map(item => item.id);
+          const newIds = categoryIds.filter(id => !allItemIds.includes(id));
+          
+          if (newIds.length > 0) {
+            console.log(`📦 Estratégia alternativa: +${newIds.length} produtos únicos encontrados`);
+            allItemIds = allItemIds.concat(newIds);
+            
+            // Try to get more pages from category search
+            let catOffset = 50;
+            while (catOffset < 1000 && newIds.length > 0) {
+              const catPageResponse = await fetch(`${ML_API_BASE}/sites/MLB/search?seller_id=${sellerId}&category=MLB1747&limit=50&offset=${catOffset}`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+              });
+              
+              if (catPageResponse.ok) {
+                const catPageData = await catPageResponse.json();
+                const catPageIds = (catPageData.results || []).map(item => item.id);
+                const uniqueNewIds = catPageIds.filter(id => !allItemIds.includes(id));
+                
+                if (uniqueNewIds.length === 0) break;
+                
+                allItemIds = allItemIds.concat(uniqueNewIds);
+                console.log(`📦 Categoria página ${catOffset/50 + 1}: +${uniqueNewIds.length} produtos únicos`);
+                catOffset += 50;
+              } else {
+                break;
+              }
+            }
+          }
+        }
+      } catch (altError) {
+        console.warn('⚠️ Estratégia alternativa falhou:', altError.message);
+      }
+      
+      console.log(`✅ Total após estratégia alternativa: ${allItemIds.length} de ${total}`);
+    }
 
     // Fetch product details in batches of 20
     const allProducts = [];
@@ -116,11 +175,20 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    res.json({
+    const response = {
       total: total,
       fetched: allProducts.length,
       results: allProducts,
-    });
+    };
+
+    // Add warning if we couldn't fetch all products due to API limits
+    if (allItemIds.length < total && allItemIds.length >= ML_PAGINATION_LIMIT - 50) {
+      response.warning = `A API do Mercado Livre limita a paginação a ~${ML_PAGINATION_LIMIT} resultados. Foram buscados ${allProducts.length} de ${total} produtos.`;
+      response.hasMore = true;
+      response.apiLimit = ML_PAGINATION_LIMIT;
+    }
+
+    res.json(response);
   } catch (error) {
     console.error('Products error:', error);
     res.status(500).json({ error: 'Erro interno', message: error.message });
