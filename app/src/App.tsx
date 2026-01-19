@@ -22,7 +22,7 @@ function App() {
     marcas,
     modelos,
     tiposPeca,
-    totalFromAPI: totalProducts,
+    totalFromAPI,
     loadedCount,
     refetch,
   } = useProducts();
@@ -139,15 +139,15 @@ function App() {
                 <div 
                   className="bg-amber-500 h-full transition-all duration-300 ease-out"
                   style={{ 
-                    width: totalProducts > 0 
-                      ? `${Math.min((loadedCount / totalProducts) * 100, 95)}%` 
+                    width: totalFromAPI > 0 
+                      ? `${Math.min((loadedCount / totalFromAPI) * 100, 95)}%` 
                       : '30%' 
                   }}
                 ></div>
               </div>
               <p className="text-xs text-steel-500">
-                {totalProducts > 0 
-                  ? `Carregando ${loadedCount} de ${totalProducts} produtos...`
+                {totalFromAPI > 0 
+                  ? `Carregando ${loadedCount} de ${totalFromAPI} produtos...`
                   : 'Carregando produtos...'}
               </p>
             </div>
