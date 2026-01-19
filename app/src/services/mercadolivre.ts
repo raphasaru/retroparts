@@ -141,14 +141,14 @@ export async function fetchSellerProducts(
   return response.json();
 }
 
-// Backend API URL (change this if your backend is on a different port/domain)
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+// Backend API URL - uses relative path for Vercel, or localhost for dev
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
 // Fetch all products from backend (handling pagination) with fallback
 export async function fetchAllSellerProducts(): Promise<MLProduct[]> {
   try {
-    // Try to fetch from backend first
-    const response = await fetch(`${BACKEND_URL}/api/products/all`);
+    // Try to fetch from authorized endpoint first (OAuth products)
+    const response = await fetch(`${BACKEND_URL}/api/products/authorized`);
     
     if (!response.ok) {
       throw new Error(`Backend Error: ${response.status} ${response.statusText}`);
