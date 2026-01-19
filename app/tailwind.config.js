@@ -46,6 +46,7 @@ export default {
         'fade-in': 'fadeIn 0.3s ease-out',
         'slide-up': 'slideUp 0.4s ease-out',
         'pulse-glow': 'pulseGlow 2s infinite',
+        'shimmer': 'shimmer 2s infinite',
       },
       keyframes: {
         fadeIn: {
@@ -59,6 +60,9 @@ export default {
         pulseGlow: {
           '0%, 100%': { boxShadow: '0 0 20px rgba(251, 191, 36, 0.3)' },
           '50%': { boxShadow: '0 0 40px rgba(251, 191, 36, 0.5)' },
+        },
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
         },
       },
     },

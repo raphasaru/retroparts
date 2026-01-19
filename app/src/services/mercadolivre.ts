@@ -144,40 +144,7 @@ export async function fetchSellerProducts(
 // Backend API URL - uses relative path for Vercel, or localhost for dev
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
-// Fetch products in batches (progressive loading)
-export async function fetchSellerProductsBatch(batch: number = 0, batchSize: number = 100): Promise<{
-  results: MLProduct[];
-  total: number;
-  hasMore: boolean;
-  fetched: number;
-}> {
-  try {
-    const response = await fetch(`${BACKEND_URL}/api/products/authorized-stream?batch=${batch}&batchSize=${batchSize}`);
-    
-    if (!response.ok) {
-      throw new Error(`Backend Error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return {
-      results: data.results || [],
-      total: data.total || 0,
-      hasMore: data.hasMore || false,
-      fetched: data.fetched || 0,
-    };
-  } catch (error) {
-    console.warn('Stream endpoint unavailable, falling back to full fetch:', error);
-    // Fallback to full fetch
-    return fetchAllSellerProductsFull().then(products => ({
-      results: products,
-      total: products.length,
-      hasMore: false,
-      fetched: products.length,
-    }));
-  }
-}
-
-// Fetch all products from backend (handling pagination) with fallback
+// Fetch all products from backend with fallback
 export async function fetchAllSellerProducts(): Promise<MLProduct[]> {
   try {
     // Try to fetch from authorized endpoint first (OAuth products)
