@@ -22,7 +22,7 @@ function App() {
     marcas,
     modelos,
     tiposPeca,
-    totalFromAPI,
+    totalFromAPI: totalProducts,
     loadedCount,
     refetch,
   } = useProducts();

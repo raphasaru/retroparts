@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { fetchSellerProductsBatch, fetchAllSellerProducts } from '../services/mercadolivre';
+import { fetchSellerProductsBatch } from '../services/mercadolivre';
 import { convertMLProduct, getUniqueValues } from '../data/products';
 import type { Product } from '../data/products';
 
