@@ -17,10 +17,13 @@ function App() {
   const {
     products,
     isLoading,
+    isLoadingMore,
     error,
     marcas,
     modelos,
     tiposPeca,
+    totalFromAPI,
+    loadedCount,
     refetch,
   } = useProducts();
 
@@ -122,7 +125,31 @@ function App() {
           {!isLoading && !error && (
             <div className="flex items-center justify-center gap-2 mt-4">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-xs text-steel-500">Dados em tempo real do Mercado Livre</span>
+              <span className="text-xs text-steel-500">
+                Dados em tempo real do Mercado Livre
+                {isLoadingMore && ` • Carregando mais produtos...`}
+              </span>
+            </div>
+          )}
+          
+          {/* Loading Progress */}
+          {isLoading && (
+            <div className="flex flex-col items-center gap-2 mt-4">
+              <div className="w-full max-w-md bg-carbon-800 rounded-full h-2 overflow-hidden">
+                <div 
+                  className="bg-amber-500 h-full transition-all duration-300 ease-out"
+                  style={{ 
+                    width: totalProducts > 0 
+                      ? `${Math.min((loadedCount / totalProducts) * 100, 95)}%` 
+                      : '30%' 
+                  }}
+                ></div>
+              </div>
+              <p className="text-xs text-steel-500">
+                {totalProducts > 0 
+                  ? `Carregando ${loadedCount} de ${totalProducts} produtos...`
+                  : 'Carregando produtos...'}
+              </p>
             </div>
           )}
         </div>
@@ -295,7 +322,20 @@ function App() {
             )}
 
             {/* Product Grid */}
-            <ProductGrid products={paginatedProducts} query={query} isLoading={isLoading} />
+            <ProductGrid products={paginatedProducts} query={query} isLoading={isLoading && products.length === 0} />
+
+            {/* Load More Button (if not using pagination or as fallback) */}
+            {!isLoading && isLoadingMore && (
+              <div className="flex justify-center mt-8">
+                <div className="flex items-center gap-2 text-steel-500">
+                  <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span className="text-sm">Carregando mais produtos...</span>
+                </div>
+              </div>
+            )}
 
             {/* Pagination */}
             {!isLoading && filteredProducts.length > ITEMS_PER_PAGE && (

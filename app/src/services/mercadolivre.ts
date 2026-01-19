@@ -144,6 +144,39 @@ export async function fetchSellerProducts(
 // Backend API URL - uses relative path for Vercel, or localhost for dev
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
+// Fetch products in batches (progressive loading)
+export async function fetchSellerProductsBatch(batch: number = 0, batchSize: number = 100): Promise<{
+  results: MLProduct[];
+  total: number;
+  hasMore: boolean;
+  fetched: number;
+}> {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/products/authorized-stream?batch=${batch}&batchSize=${batchSize}`);
+    
+    if (!response.ok) {
+      throw new Error(`Backend Error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return {
+      results: data.results || [],
+      total: data.total || 0,
+      hasMore: data.hasMore || false,
+      fetched: data.fetched || 0,
+    };
+  } catch (error) {
+    console.warn('Stream endpoint unavailable, falling back to full fetch:', error);
+    // Fallback to full fetch
+    return fetchAllSellerProductsFull().then(products => ({
+      results: products,
+      total: products.length,
+      hasMore: false,
+      fetched: products.length,
+    }));
+  }
+}
+
 // Fetch all products from backend (handling pagination) with fallback
 export async function fetchAllSellerProducts(): Promise<MLProduct[]> {
   try {
@@ -158,32 +191,35 @@ export async function fetchAllSellerProducts(): Promise<MLProduct[]> {
     return data.results || [];
   } catch (error) {
     console.warn('Backend unavailable, trying direct API:', error);
-    
-    // Fallback: try direct API call
-    try {
-      const allProducts: MLProduct[] = [];
-      let offset = 0;
-      const limit = 50;
-      let total = Infinity;
+    return fetchAllSellerProductsFull();
+  }
+}
 
-      while (offset < total && offset < 1000) { // ML limits to 1000 results
-        const response = await fetchSellerProducts({ limit, offset });
-        allProducts.push(...response.results);
-        total = response.paging.total;
-        offset += limit;
+// Fallback: fetch all products via direct API
+async function fetchAllSellerProductsFull(): Promise<MLProduct[]> {
+  try {
+    const allProducts: MLProduct[] = [];
+    let offset = 0;
+    const limit = 50;
+    let total = Infinity;
 
-        // Small delay to avoid rate limiting
-        if (offset < total) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
+    while (offset < total && offset < 1000) { // ML limits to 1000 results
+      const response = await fetchSellerProducts({ limit, offset });
+      allProducts.push(...response.results);
+      total = response.paging.total;
+      offset += limit;
+
+      // Small delay to avoid rate limiting
+      if (offset < total) {
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
-
-      return allProducts;
-    } catch (directError) {
-      console.warn('Direct API also unavailable, using fallback data:', directError);
-      // Return fallback data when both fail
-      return FALLBACK_PRODUCTS;
     }
+
+    return allProducts;
+  } catch (directError) {
+    console.warn('Direct API also unavailable, using fallback data:', directError);
+    // Return fallback data when both fail
+    return FALLBACK_PRODUCTS;
   }
 }
 
