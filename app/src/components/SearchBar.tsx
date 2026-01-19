@@ -113,9 +113,9 @@ export function SearchBar({
         <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-amber-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
 
         {/* Input */}
-        <div className="relative bg-carbon-700 rounded-2xl border border-carbon-500/50 overflow-visible focus-within:border-amber-500/50 focus-within:ring-2 focus-within:ring-amber-500/20 transition-all">
+        <div className="relative bg-white dark:bg-carbon-700 rounded-2xl border border-slate-200 dark:border-carbon-500/50 overflow-visible focus-within:border-amber-500/50 focus-within:ring-2 focus-within:ring-amber-500/20 transition-all shadow-lg dark:shadow-none">
           <div className="flex items-center">
-            <div className="pl-5 pr-3 py-4 text-amber-400">
+            <div className="pl-5 pr-3 py-4 text-amber-500 dark:text-amber-400">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -131,7 +131,7 @@ export function SearchBar({
               onFocus={() => setShowSuggestions(true)}
               onKeyDown={handleKeyDown}
               placeholder="Buscar: gol g3 esquerdo, palio capa, civic retrovisor..."
-              className="flex-1 bg-transparent text-white placeholder-steel-500 text-lg py-4 pr-4 outline-none focus:outline-none font-body"
+              className="flex-1 bg-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-steel-500 text-lg py-4 pr-4 outline-none focus:outline-none font-body"
               style={{ outline: 'none', boxShadow: 'none' }}
             />
             {query && (
@@ -140,7 +140,7 @@ export function SearchBar({
                   setQuery('');
                   inputRef.current?.focus();
                 }}
-                className="pr-5 text-steel-500 hover:text-amber-400 transition-colors"
+                className="pr-5 text-slate-400 dark:text-steel-500 hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -150,24 +150,24 @@ export function SearchBar({
           </div>
 
           {/* Search Stats Bar */}
-          <div className="flex items-center justify-between px-5 py-2 bg-carbon-800/50 border-t border-carbon-600/30">
-            <div className="flex items-center gap-4 text-xs text-steel-500">
+          <div className="flex items-center justify-between px-5 py-2 bg-slate-50 dark:bg-carbon-800/50 border-t border-slate-100 dark:border-carbon-600/30">
+            <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-steel-500">
               <span className="flex items-center gap-1.5">
                 {isLoading ? (
-                  <svg className="w-3.5 h-3.5 text-amber-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                 ) : (
-                  <svg className="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                   </svg>
                 )}
-                <span className="text-white font-semibold">{isLoading ? '...' : resultsCount}</span> de {isLoading ? '...' : totalCount} produtos
+                <span className="text-slate-900 dark:text-white font-semibold">{isLoading ? '...' : resultsCount}</span> de {isLoading ? '...' : totalCount} produtos
               </span>
             </div>
-            <div className="text-xs text-steel-600">
-              Pressione <kbd className="px-1.5 py-0.5 bg-carbon-600 rounded text-steel-400 font-mono">Enter</kbd> para buscar
+            <div className="text-xs text-slate-400 dark:text-steel-600">
+              Pressione <kbd className="px-1.5 py-0.5 bg-slate-200 dark:bg-carbon-600 rounded text-slate-600 dark:text-steel-400 font-mono">Enter</kbd> para buscar
             </div>
           </div>
         </div>
@@ -177,11 +177,11 @@ export function SearchBar({
       {showSuggestions && suggestions.length > 0 && (
         <div
           ref={suggestionsRef}
-          className="absolute top-full left-0 right-0 mt-2 bg-carbon-800 border border-carbon-600/50 rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-[9999] animate-fade-in"
+          className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-carbon-800 border border-slate-200 dark:border-carbon-600/50 rounded-xl shadow-2xl shadow-black/10 dark:shadow-black/50 overflow-hidden z-[9999] animate-fade-in"
           style={{ position: 'absolute', zIndex: 9999 }}
         >
-          <div className="px-4 py-2 bg-carbon-700/50 border-b border-carbon-600/30">
-            <p className="text-xs text-steel-500 uppercase tracking-wider font-semibold">
+          <div className="px-4 py-2 bg-slate-50 dark:bg-carbon-700/50 border-b border-slate-100 dark:border-carbon-600/30">
+            <p className="text-xs text-slate-500 dark:text-steel-500 uppercase tracking-wider font-semibold">
               Sugestões Inteligentes
             </p>
           </div>
@@ -195,24 +195,24 @@ export function SearchBar({
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
                   index === selectedIndex
-                    ? 'bg-amber-500/10 border-l-2 border-amber-400'
-                    : 'hover:bg-carbon-700/50 border-l-2 border-transparent'
+                    ? 'bg-amber-500/10 border-l-2 border-amber-500 dark:border-amber-400'
+                    : 'hover:bg-slate-50 dark:hover:bg-carbon-700/50 border-l-2 border-transparent'
                 }`}
               >
                 <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
                   suggestion.type === 'combinacao'
-                    ? 'bg-amber-500/20 text-amber-400'
-                    : 'bg-carbon-600 text-steel-400'
+                    ? 'bg-amber-500/20 text-amber-500 dark:text-amber-400'
+                    : 'bg-slate-100 dark:bg-carbon-600 text-slate-500 dark:text-steel-400'
                 }`}>
                   {getSuggestionIcon(suggestion.type)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white truncate text-sm">{suggestion.label}</p>
+                  <p className="text-slate-900 dark:text-white truncate text-sm">{suggestion.label}</p>
                 </div>
                 <span className={`flex-shrink-0 text-[10px] font-bold tracking-wider px-2 py-0.5 rounded ${
                   suggestion.type === 'combinacao'
-                    ? 'bg-amber-500/20 text-amber-400'
-                    : 'bg-carbon-600 text-steel-500'
+                    ? 'bg-amber-500/20 text-amber-500 dark:text-amber-400'
+                    : 'bg-slate-100 dark:bg-carbon-600 text-slate-500 dark:text-steel-500'
                 }`}>
                   {getSuggestionTypeLabel(suggestion.type)}
                 </span>
